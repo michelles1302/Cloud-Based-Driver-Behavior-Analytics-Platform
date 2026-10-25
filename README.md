@@ -1,298 +1,298 @@
-# 🚗 Cloud-Based Driver Behavior Analytics Platform
+# Cloud-Based Driver Behavior Analytics Platform
 
-An end-to-end telematics analytics platform built with Python, Pandas, Scikit-learn, Streamlit, Plotly, SQLite, and optional Amazon S3 cloud storage.
+A Python-based telematics analytics platform that simulates vehicle sensor data, detects unsafe driving behavior, calculates explainable driver safety scores, and uses machine learning to classify driving risks. The application provides an interactive Streamlit dashboard, local SQLite persistence, and optional Amazon S3 integration for cloud storage.
 
-This project simulates IoT vehicular sensor telemetry, automatically detects unsafe driving behaviors using rule-based threshold heuristics, computes transparent driver safety scores, classifies trip risks using a trained Random Forest model, and provides a multi-tab interactive Streamlit dashboard.
+## Overview
 
----
+Understanding driver behavior is important for improving road safety and managing vehicle fleets. This project demonstrates how simulated vehicle telemetry can be processed to identify risky driving patterns and present meaningful safety insights through an interactive dashboard.
 
-## 📋 Table of Contents
-1. [Key Features](#-key-features)
-2. [Technology Stack](#-technology-stack)
-3. [System Architecture](#-system-architecture)
-4. [Project Structure](#-project-structure)
-5. [Installation & Setup](#-installation--setup)
-6. [How It Works](#-how-it-works)
-   - [A. Telemetry Simulation](#a-driver-telemetry-simulator)
-   - [B. Unsafe Behavior Detection](#b-unsafe-behavior-detection)
-   - [C. Driver Safety Score Formula](#c-driver-safety-score-formula)
-   - [D. Machine Learning Risk Model](#d-machine-learning-risk-classifier)
-   - [E. Streamlit Dashboard Guide](#e-streamlit-dashboard-guide)
-7. [Cloud Integration (Amazon S3)](#-cloud-integration-amazon-s3)
-8. [Running Tests](#-running-tests)
-9. [Presentation & Demo Guide](#-presentation--demo-guide)
-10. [Limitations & Disclosures](#-limitations--disclosures)
+The platform combines rule-based event detection, transparent scoring logic, and a Random Forest classifier to analyze driving behavior. It is designed with a local-first approach, so the core application can run without mandatory cloud infrastructure.
 
----
+## Key Features
 
-## 🌟 Key Features
+- **Vehicle Telemetry Simulation:** Generates simulated driving data for multiple drivers, including speed, acceleration, braking intensity, steering angle, and distance traveled.
+- **Unsafe Driving Detection:** Identifies five types of risky behavior:
+  - Overspeeding
+  - Harsh braking
+  - Rapid acceleration
+  - Sharp turning
+  - Excessive idling
+- **Explainable Safety Scoring:** Calculates a driver safety score from 0 to 100 using configurable event penalties and severity multipliers.
+- **Machine Learning Risk Classification:** Uses a Scikit-learn Random Forest classifier to predict driving risk categories from trip-level features.
+- **Interactive Analytics Dashboard:** Displays fleet statistics, driver comparisons, driving trends, behavior distributions, and model evaluation results.
+- **Local Data Persistence:** Uses SQLite to store and retrieve application data without requiring an external database server.
+- **Optional Cloud Storage:** Integrates Amazon S3 through Boto3 to support telemetry archive uploads.
+- **Automated Tests:** Includes a test suite for important platform components.
 
-- **Realistic Telematics Simulator**: Generates synchronized multi-driver vehicular telemetry (Speed, Acceleration, Braking Intensity, Steering Angle, Distance).
-- **Rule-Based Unsafe Driving Detection**: Automatically flags 5 distinct hazardous driving behaviors:
-  1. *Overspeeding*
-  2. *Harsh Braking*
-  3. *Rapid Acceleration*
-  4. *Sharp Turning*
-  5. *Excessive Idling*
-- **Transparent Safety Scoring**: Computes an explainable 0–100 safety score and classifies drivers into four risk tiers: **Excellent**, **Good**, **Moderate**, and **High Risk**.
-- **Scikit-Learn Machine Learning**: A trained Random Forest Classifier predicts driving risk classes with evaluated Accuracy, Precision, Recall, F1-Score, and a Confusion Matrix.
-- **Interactive Streamlit Web Dashboard**: Built-in KPI metrics, Plotly interactive timeseries plots, and threshold tuning sliders.
-- **SQLite Local Persistence**: Works 100% offline without mandatory external cloud infrastructure.
-- **Optional AWS S3 Cloud Storage**: Securely archives historical telemetry archives to Amazon S3 via Boto3 with verified upload confirmation.
+## Technology Stack
 
----
+| Technology | Purpose |
+|---|---|
+| Python | Application logic and data processing |
+| Pandas and NumPy | Telemetry processing and feature preparation |
+| Scikit-learn | Random Forest training and risk classification |
+| Streamlit | Interactive web application |
+| Plotly | Interactive charts and visual analytics |
+| SQLite | Local database and persistence |
+| Joblib | Machine learning model serialization |
+| Boto3 | Optional Amazon S3 integration |
 
-## 🛠️ Technology Stack
+## System Architecture
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Language** | Python 3.10+ | Core data simulation, ML modeling, and pipeline execution |
-| **Data Processing** | Pandas, NumPy | Timeseries manipulation, event aggregation, and metrics |
-| **Database** | SQLite 3 | Zero-configuration local relational persistence |
-| **Machine Learning** | Scikit-Learn, Joblib | Random Forest model training, feature extraction, evaluation |
-| **Dashboard** | Streamlit | Clean, interactive web UI with real-time controls |
-| **Visualization** | Plotly | Dynamic charts (speed/accel timeseries, confusion matrix, bar plots) |
-| **Cloud Storage** | Amazon S3 + Boto3 | Optional secure remote telematics archive |
-
-*No heavy dependencies like Kafka, Kinesis, Docker, or Kubernetes are required.*
-
----
-
-## 🏛️ System Architecture
+The application follows a modular pipeline in which simulated telemetry is stored, analyzed, scored, and presented through the dashboard.
 
 ```mermaid
-graph TD
-    A[Telemetry Generator\ntelemetry_generator.py] -->|Raw 1s Ticks| B[Local SQLite Database\ndata/driver_analytics.db]
-    B -->|Time-Series Query| C[Behavior Detector\nbehavior_detector.py]
-    C -->|Detected Events| B
-    B -->|Events & Distance| D[Safety Scoring Engine\nsafety_score.py]
-    D -->|0-100 Scores & Tiers| B
-    B -->|Aggregated Trip Features| E[ML Risk Classifier\ntrain_model.py]
-    E -->|Model Artifact| F[models/driver_risk_model.joblib]
-    
-    B --> G[Streamlit Dashboard\napp.py]
-    F --> G
-    
-    B -.->|Optional Telemetry CSV Export| H[Boto3 S3 Client\ncloud_storage.py]
-    H -.->|HTTPS Upload| I[(Amazon S3 Bucket)]
+flowchart TD
+    A[Telemetry Generator] --> B[SQLite Database]
+    B --> C[Behavior Detection Engine]
+    C --> D[Detected Driving Events]
+    D --> B
+    B --> E[Safety Scoring Engine]
+    E --> F[Driver Safety Scores]
+    B --> G[Feature Preparation]
+    G --> H[Random Forest Classifier]
+    H --> I[Risk Predictions and Evaluation]
+    B --> J[Streamlit Dashboard]
+    F --> J
+    I --> J
+    B -. Optional Export .-> K[Amazon S3 via Boto3]
 ```
 
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```text
-cloud-driver-behavior-platform/
+Cloud-Based-Driver-Behavior-Analytics-Platform/
 │
-├── app.py                     # Streamlit interactive multi-tab dashboard
-├── telemetry_generator.py     # Physics-based telematics simulation engine
-├── behavior_detector.py       # Threshold-based unsafe event detection rules
-├── safety_score.py            # Heuristic 0-100 scoring algorithm & transparency
-├── train_model.py             # Random Forest ML model training & evaluation
-├── database.py                # SQLite schema management, inserts, and queries
-├── cloud_storage.py           # Optional Amazon S3 upload & verification (Boto3)
-├── pipeline.py                # End-to-end simulation & database sync pipeline
-├── test_platform.py           # Automated unit and integration test suite
+├── app.py                  # Streamlit dashboard
+├── telemetry_generator.py  # Simulated vehicle telemetry
+├── behavior_detector.py    # Unsafe driving event detection
+├── safety_score.py         # Driver safety scoring and explanations
+├── train_model.py          # Random Forest training and evaluation
+├── database.py             # SQLite database operations
+├── pipeline.py             # End-to-end processing pipeline
+├── cloud_storage.py        # Optional Amazon S3 integration
+├── test_platform.py        # Automated tests
 │
-├── requirements.txt           # Python dependencies
-├── .env.example               # Template for optional AWS S3 credentials
-├── .gitignore                 # Excludes caches, databases, and secrets
-├── README.md                  # Complete documentation and presentation guide
+├── requirements.txt        # Python dependencies
+├── .env.example            # Example environment configuration
+├── .gitignore              # Files excluded from version control
+├── README.md               # Project documentation
 │
 ├── data/
-│   ├── driver_analytics.db    # SQLite database (auto-generated)
-│   ├── telemetry.csv          # Exported telematics dataset
-│   └── .gitkeep
+│   └── .gitkeep            # Preserves the data directory
 │
 └── models/
-    ├── driver_risk_model.joblib # Trained Random Forest model artifact
-    └── .gitkeep
+    └── .gitkeep            # Preserves the models directory
 ```
 
----
+Generated databases, telemetry exports, and model artifacts may appear in the `data/` and `models/` directories when the application runs. Their availability depends on the execution workflow and Git ignore rules.
 
-## 🚀 Installation & Setup
+## Installation and Setup
 
-### 1. Clone or Open Workspace
-Open a terminal in the project directory:
+### Prerequisites
+
+- Python 3.10 or a compatible version supported by the project dependencies
+- pip
+- Git, if cloning the repository
+
+### 1. Clone the Repository
+
 ```bash
-cd "d:\Projects\CC\4"
+git clone https://github.com/michelles1302/Cloud-Based-Driver-Behavior-Analytics-Platform.git
+cd Cloud-Based-Driver-Behavior-Analytics-Platform
 ```
 
-### 2. (Optional) Create a Python Virtual Environment
+### 2. Create a Virtual Environment
+
+On Windows PowerShell:
+
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+On macOS or Linux:
+
 ```bash
 python -m venv venv
-# On Windows PowerShell:
-venv\Scripts\Activate.ps1
-# On macOS/Linux:
 source venv/bin/activate
 ```
 
 ### 3. Install Dependencies
+
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-### 4. Initialize Data & Train Machine Learning Model
-Generate the initial telemetry dataset and train the Random Forest model:
+### 4. Initialize the Data Pipeline
+
+Run the project's pipeline and model-training scripts:
+
 ```bash
 python pipeline.py
 python train_model.py
 ```
 
-### 5. Launch the Streamlit Web Dashboard
+These commands follow the current project workflow. Check the console output for any dependency, data-generation, or model-training errors.
+
+### 5. Launch the Dashboard
+
 ```bash
 streamlit run app.py
 ```
-Open **`http://localhost:8501`** in your browser.
 
----
+Open the local URL printed in your terminal, usually:
 
-## 🔍 How It Works
+`http://localhost:8501`
 
-### A. Driver Telemetry Simulator
-The simulator (`telemetry_generator.py`) generates physical timeseries samples at 1-second intervals for multiple drivers and trips.
-- **Speed ($v$)**: Modeled continuously in km/h based on acceleration ($v_{t} = v_{t-1} + a \cdot \Delta t \cdot 3.6$).
-- **Acceleration ($a$)**: Deceleration (negative) and acceleration (positive) in m/s².
-- **Braking Intensity**: Calculated proportionally when deceleration occurs (0% to 100%).
-- **Steering Angle**: Modeled with realistic natural yaw deviations (-45° to +45°).
-- **Distance Travelled**: Cumulative distance per trip in kilometers.
+## How It Works
 
-Simulated driver archetypes include:
-- `Alex Chen` (Safe Commuter): Consistent speeds, gentle maneuvers.
-- `Beatriz Silva` (Moderate Driver): Occasional mild speeding, mostly compliant.
-- `Carlos Diaz` (Speeding Enthusiast): Frequent highway speeding bursts.
-- `David Miller` (Aggressive Courier): Rapid accelerations, sharp turns, and sudden braking.
-- `Elena Rostova` (High Risk / Idle): Prolonged stationary idling and erratic deceleration.
+### 1. Telemetry Generation
 
----
+The simulator creates vehicle telemetry for multiple drivers and trips. Its signals include:
 
-### B. Unsafe Behavior Detection
-The detector (`behavior_detector.py`) applies configurable threshold heuristics and clusters contiguous sensor spikes into distinct maneuvers:
+- Vehicle speed in km/h
+- Acceleration in m/s²
+- Braking intensity
+- Steering angle
+- Distance traveled
 
-| Unsafe Behavior | Trigger Threshold | Severity Tiers (Low / Med / High) |
-|---|---|---|
-| **Overspeeding** | Speed > `100.0 km/h` sustained $\ge 3$s | < 112 / 112–125 / > 125 km/h |
-| **Harsh Braking** | Deceleration $\le -3.0\text{ m/s}^2$ ($v > 10$ km/h) | -3.0 to -3.6 / -3.6 to -4.4 / < -4.4 m/s² |
-| **Rapid Acceleration** | Acceleration $\ge +3.0\text{ m/s}^2$ | 3.0 to 3.6 / 3.6 to 4.3 / > 4.3 m/s² |
-| **Sharp Turning** | Steering Angle $\ge |28.0^\circ|$ ($v \ge 25$ km/h) | 28° to 33° / 33° to 39° / > 39° |
-| **Excessive Idling** | Speed $= 0$ km/h for $\ge 60$ seconds | 60–75s / 75–90s / > 90s |
+The generated data provides the input for subsequent event detection and analytics.
 
----
+### 2. Unsafe Driving Detection
 
-### C. Driver Safety Score Formula
-The safety scoring module (`safety_score.py`) implements a transparent penalty-deduction formula:
+The behavior detection module evaluates telemetry against configurable thresholds and identifies risky driving events.
 
-$$\text{Total Penalty} = \sum_{\text{events}} \left( \text{Base Penalty} \times \text{Severity Multiplier} \right)$$
+| Event | Detection principle |
+|---|---|
+| Overspeeding | Speed exceeds the configured limit for a sustained period |
+| Harsh braking | Strong negative acceleration |
+| Rapid acceleration | Strong positive acceleration |
+| Sharp turning | Large steering angle, subject to speed conditions |
+| Excessive idling | Vehicle remains stationary for a configured duration |
 
-$$\text{Normalized Penalty} = \frac{\text{Total Penalty}}{\max(1, \text{Total Trips})}$$
+Thresholds are project-defined settings intended for demonstration and can be adjusted according to the application requirements.
 
-$$\text{Safety Score} = \max\left(0, \min\left(100, 100 - \text{Normalized Penalty}\right)\right)$$
+### 3. Driver Safety Scoring
 
-#### Penalty Deductions:
-- **Overspeeding**: 4.5 pts
-- **Harsh Braking**: 5.0 pts
-- **Rapid Acceleration**: 3.0 pts
-- **Sharp Turning**: 3.5 pts
-- **Excessive Idling**: 2.5 pts
-- **Severity Multipliers**: Low = `0.8x`, Medium = `1.0x`, High = `1.3x`.
+The scoring engine starts with a base score of 100 and deducts points according to detected events and their severity.
 
-#### Risk Classification:
-- **90 – 100**: 🛡️ **Excellent** (Careful, law-abiding driver)
-- **75 – 89**: ✅ **Good** (Minor infractions, generally safe)
-- **60 – 74**: ⚠️ **Moderate** (Frequent infractions, requires coaching)
-- **Below 60**: 🚨 **High Risk** (Severe safety violations, intervention needed)
+The general calculation is:
 
----
+**Total Penalty**
 
-### D. Machine Learning Risk Classifier
-The ML module (`train_model.py`) trains a Scikit-Learn **Random Forest Classifier** ($100$ estimators, max depth $6$) on statistical trip aggregates:
-- **Feature Set**: `avg_speed`, `max_speed`, `speed_std`, `min_accel`, `max_accel`, `harsh_brake_count`, `rapid_accel_count`, `sharp_turn_count`, `excessive_idle_duration`, `avg_abs_steering`.
-- **Target Classes**: `Safe`, `Moderate`, `High Risk`.
-- **Evaluation**: 80/20 train/test split evaluated with:
-  - Accuracy: **~80% – 87%**
-  - Weighted Precision & Recall
-  - Macro F1-Score
-  - Confusion Matrix Heatmap
+Sum of event base penalties multiplied by their severity multipliers.
 
----
+**Normalized Penalty**
 
-### E. Streamlit Dashboard Guide
+Total penalty divided by the applicable trip count, with a minimum divisor of one.
 
-1. **📊 Fleet Overview**: High-level KPIs (Total Drivers, Total Trips, Fleet Avg Score, Total Unsafe Events) and score comparison bar charts.
-2. **👤 Driver Analysis**: Detailed breakdown per driver, speed metrics, event counts by category, and academic penalty calculation explanation.
-3. **🛣️ Trip Analytics**: Interactive Plotly timeseries charts displaying **Speed vs. Time** (with 100 km/h limit line) and **Acceleration vs. Time** (with harsh brake & rapid accel boundaries).
-4. **⚠️ Behavior Analytics**: Fleet-wide distribution donut charts and event type proportions.
-5. **🤖 Machine Learning**: Model evaluation metrics, confusion matrix, feature importance ranking, and an interactive **Live Risk Predictor** with real-time sliders.
-6. **☁️ Cloud Integration**: Status monitor for Amazon S3, configuration template, and verified backup button.
+**Final Safety Score**
 
----
+`max(0, min(100, 100 - Normalized Penalty))`
 
-## ☁️ Cloud Integration (Amazon S3)
+The dashboard presents the resulting score and its event-level breakdown, helping users understand which behaviors contributed to a driver's score.
 
-The application functions **100% locally by default**. Cloud backup is an optional feature.
+The scoring formula is a project-defined heuristic, not an officially validated road-safety or insurance scoring standard.
 
-### AWS Setup Instructions
+### 4. Machine Learning Risk Classification
 
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-2. Open `.env` and fill in your AWS credentials and bucket name:
-   ```ini
-   AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-   AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-   AWS_DEFAULT_REGION=us-east-1
-   S3_BUCKET_NAME=my-driver-analytics-telemetry-bucket
-   ```
-3. Restart the Streamlit dashboard or run `python cloud_storage.py`.
+The project uses a Random Forest classifier to analyze trip-level features and classify driving risk.
 
-### AWS Pricing & Free Tier Notice
-- **Free Tier Allowance**: 5 GB of standard S3 storage, 20,000 GET requests, and 2,000 PUT requests per month for 12 months.
-- **Standard Rates**: Approximately **$0.023 per GB/month** (US East).
-- **Required IAM Permissions**: `s3:PutObject`, `s3:GetObject`, `s3:ListBucket`.
-- ⚠️ *Always delete temporary test buckets or set lifecycle expiration rules to prevent unexpected AWS charges.*
+Example input features include:
 
----
+- Average and maximum speed
+- Speed variability
+- Minimum and maximum acceleration
+- Harsh braking count
+- Rapid acceleration count
+- Sharp turning count
+- Excessive idling duration
+- Average absolute steering angle
 
-## 🧪 Running Tests
+The training module supports model evaluation using metrics such as accuracy, precision, recall, F1-score, and a confusion matrix.
 
-A comprehensive unit and integration test suite is included in `test_platform.py`:
+Actual evaluation results depend on the generated or supplied training data and should be taken from the model's execution output rather than assumed in advance.
+
+### 5. Interactive Dashboard
+
+The Streamlit application organizes the analytics into sections for fleet-level and individual-driver analysis.
+
+Depending on the available data and application configuration, the dashboard includes:
+
+- **Fleet Overview:** Driver statistics, trip counts, safety-score summaries, and comparisons.
+- **Driver Analysis:** Individual driver scores and event-level penalty explanations.
+- **Trip Analytics:** Speed and acceleration time-series visualizations.
+- **Behavior Analytics:** Distribution of detected unsafe driving events.
+- **Machine Learning:** Model evaluation, feature importance, and interactive risk prediction.
+- **Cloud Integration:** Amazon S3 configuration and backup functionality.
+
+## Optional Cloud Integration: Amazon S3
+
+The application is designed to run locally using SQLite. Amazon S3 integration is optional and is intended for cloud-based telemetry archiving.
+
+To configure S3:
+
+1. Copy `.env.example` to `.env`.
+2. Enter your AWS configuration and bucket name using the variables documented in the example file.
+3. Ensure the AWS identity has only the permissions needed for the intended S3 operations.
+4. Follow the application's cloud integration instructions to configure and test uploads.
+
+**Security considerations**
+
+- Never commit real AWS credentials or secret keys.
+- Keep `.env` out of version control.
+- Use an appropriately configured IAM role or securely managed credentials.
+- Review AWS pricing and storage policies before uploading data.
+
+Without S3 configuration, the core application is intended to operate using local storage.
+
+## Running Tests
+
+The repository includes `test_platform.py` for testing key components.
+
+Run:
+
 ```bash
 python test_platform.py
 ```
-Expected output:
-```text
-......
-----------------------------------------------------------------------
-Ran 6 tests in 0.22s
 
-OK
-```
-Tests cover:
-- Telemetry simulation structure & physical bounds
-- Behavior detection logic & severity tiering
-- Safety scoring mathematical bounds & explanations
-- SQLite database CRUD & queries
-- Machine learning model loading & inference
-- Cloud storage graceful local fallback
+The test suite is intended to cover areas such as:
+
+- Telemetry generation and validation
+- Unsafe behavior detection
+- Safety-score calculations
+- Database operations
+- Machine learning inference
+- Cloud-storage fallback behavior
+
+Review the actual test output to determine whether all tests pass in your environment.
+
+## Limitations
+
+- **Simulated telemetry:** The project uses generated vehicle data rather than measurements collected from physical vehicles.
+- **Heuristic thresholds:** Detection rules and scoring weights are configurable demonstration settings, not universally applicable safety standards.
+- **Model generalization:** Predictions depend on the training data and feature quality. Results on simulated data do not establish real-world predictive performance.
+- **Optional cloud services:** Amazon S3 requires separate AWS configuration and may incur charges.
+- **Production readiness:** Real-world deployment would require further validation, security controls, operational monitoring, and testing with representative vehicle data.
+
+## Future Enhancements
+
+Potential extensions include:
+
+- Integration with real vehicle telemetry or IoT devices
+- More advanced driver-risk prediction models
+- Historical trend analysis and driver-specific recommendations
+- Scheduled cloud backups and retention policies
+- Fleet alerts and configurable safety thresholds
+- Validation using representative real-world driving datasets
+
+## Project Purpose
+
+This project demonstrates the integration of telemetry simulation, data processing, rule-based analytics, machine learning, visualization, database persistence, and optional cloud storage in one modular application.
+
+It is intended for educational use, portfolio demonstration, and further experimentation with cloud-enabled analytics systems.
 
 ---
 
-## 🎤 Presentation & Demo Guide
-
-When demonstrating this project for academic or technical evaluations:
-
-1. **Walk Through the Architecture**: Explain how raw vehicular sensors feed into rule detection, scoring, SQLite, and the ML classifier.
-2. **Demonstrate Telemetry Generation**: Click **"⚡ Generate New Data"** in the sidebar to prove the dashboard renders dynamic, stored SQLite data rather than hardcoded mock figures.
-3. **Showcase Trip Dynamics**: Go to **Trip Analytics** and demonstrate how speed and acceleration dips correlate with detected harsh braking and rapid acceleration markers.
-4. **Demonstrate Machine Learning**: Navigate to the **Machine Learning** tab, show the Confusion Matrix, and adjust the input sliders (e.g. increase Harsh Braking to 4 and Max Speed to 120 km/h) to show the model instantly classify the trip as `High Risk`.
-5. **Explain Local-First Cloud Design**: Point out how the app works seamlessly offline, and show how Amazon S3 is cleanly decoupled via Boto3 and environment variables.
-
----
-
-## ⚠️ Limitations & Disclosures
-
-- **Synthetic Simulation**: All telemetry data in this project is synthetically generated using physical models. In commercial telematics, datasets are gathered from OBD-II/CAN-bus devices and calibrated across diverse weather, GPS jitter, and vehicle weight classes.
-- **Educational Scoring Model**: The 0–100 safety score and penalty weights represent a project-defined heuristic designed for demonstration and coursework, not an actuarial insurance underwriting standard.
-- **Security**: Real AWS credentials must never be committed to source code or shared in public repositories.
+**Built with Python, Scikit-learn, Streamlit, Plotly, SQLite, and optional Amazon S3 integration.**
